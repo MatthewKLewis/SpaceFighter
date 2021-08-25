@@ -1,13 +1,14 @@
 import './style.css'
 import * as THREE from 'three'
+
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
-import { FlyControls } from 'three/examples/jsm/controls/FlyControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
-import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
+import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
+import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
@@ -168,22 +169,23 @@ directionalLight.position.y = 3;
 scene.add(directionalLight)
 
 //Add Fog
-let fog = new THREE.FogExp2(0x000000, 0.02)
-scene.fog = fog;
-
-//scene.background = skyMap;
-//scene.background = new THREE.Color(0x000000)
+// let fog = new THREE.FogExp2(0x000000, 0.02)
+// scene.fog = fog;
 
 const cubeLoader = new THREE.CubeTextureLoader();
 const texture = cubeLoader.load([
-    'assets/images/pos-x.jpg',
-    'assets/images/neg-x.jpg',
-    'assets/images/pos-y.jpg',
-    'assets/images/neg-y.jpg',
-    'assets/images/pos-z.jpg',
-    'assets/images/neg-z.jpg',
+    'assets/images/pos-x.png',
+    'assets/images/neg-x.png',
+    'assets/images/pos-y.png',
+    'assets/images/neg-y.png',
+    'assets/images/pos-z.png',
+    'assets/images/neg-z.png',
 ], ()=>{
     scene.background = texture;
+}, ()=>{
+
+}, (e)=>{
+    console.log(e)
 });
 
 //#endregion
@@ -544,19 +546,26 @@ function worldMoves() {
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-//renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputEncoding = THREE.sRGBEncoding;
 
-const renderPass = new RenderPass(scene, camera)
-// const glitchPass = new BokehPass(scene, camera, {
-//     focus: 2,
-//     aspect: camera.aspect,
-//     aperture: .0125,
-//     maxblur: 0.01
-// });
-//const glitchPass = new GlitchPass(scene, camera);
 const composer = new EffectComposer(renderer)
+const renderPass = new RenderPass(scene, camera)
 composer.addPass(renderPass)
-//composer.addPass(glitchPass);
+// const bloomPass = new BloomPass(
+//     1,    // strength
+//     25,   // kernel size
+//     4,    // sigma ?
+//     512,  // blur render target resolution
+// );
+// composer.addPass(bloomPass);
+// const filmPass = new FilmPass(
+//     0.35,   // noise intensity
+//     0.025,  // scanline intensity
+//     648,    // scanline count
+//     false,  // grayscale
+// );
+// filmPass.renderToScreen = true;
+// composer.addPass(filmPass);
 
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

@@ -34,15 +34,29 @@ hr {
 #pointer-lock {
     position: fixed;
     left: 300px;
-    z-index: 100;
+    z-index: 102;
 }
 
 #gunhand {
     position: fixed;
     bottom: 0;
-    left: 42%;
-    z-index: 98;
+    left: 40%;
+    z-index: 97;
     filter: blur(4px);
+}
+
+#cockpitL {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 99;
+}
+
+#cockpitR {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 98;
 }
 
 .reload-animation {
@@ -155,6 +169,7 @@ hr {
     display: inline;
     color: white;
     width: 80%;
+    z-index: 101;
 }
 
 .next {

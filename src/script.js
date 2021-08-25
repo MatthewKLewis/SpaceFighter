@@ -22,6 +22,8 @@ const inventory = document.querySelector('#inventory')
 const icon = document.querySelector('#icon')
 const comms = document.querySelector('#comms')
 const healthAmmo = document.querySelector('#health-ammo')
+const cockpitL = document.querySelector('#cockpitL')
+const cockpitR = document.querySelector('#cockpitR')
 const gunhand = document.querySelector('#gunhand')
 const youDied = document.querySelector('#you-died')
 
@@ -407,7 +409,6 @@ function acceptPlayerInputs() {
     var fwdIntersects = fwdCaster.intersectObjects(scene.children);
     if (fwdIntersects.length > 0) {
         if (fwdIntersects[0].distance < BARRIER_DISTANCE) {
-            console.log('wall hit')
             fwdIntersects[0].object.velocity = camera.velocity
             ALLOW_FWD = false;
         }
@@ -417,7 +418,6 @@ function acceptPlayerInputs() {
     var bckIntersects = bckCaster.intersectObjects(scene.children);
     if (bckIntersects.length > 0) {
         if (bckIntersects[0].distance < BARRIER_DISTANCE) {
-            console.log('wall hit')
             ALLOW_BACK = false;
         }
     }
@@ -426,7 +426,6 @@ function acceptPlayerInputs() {
     var lftIntersects = lftCaster.intersectObjects(scene.children);
     if (lftIntersects.length > 0) {
         if (lftIntersects[0].distance < BARRIER_DISTANCE) {
-            console.log('wall hit')
             ALLOW_LEFT = false;
         }
     }
@@ -435,7 +434,6 @@ function acceptPlayerInputs() {
     var rigIntersects = rigCaster.intersectObjects(scene.children);
     if (rigIntersects.length > 0) {
         if (rigIntersects[0].distance < BARRIER_DISTANCE) {
-            console.log('wall hit')
             ALLOW_RIGHT = false;
         }
     }
@@ -564,7 +562,12 @@ function generateHUDText(elapsedTime) {
 function generateGunImage() {
     gunhand.src = gunSpriteURLS[camera.currentGun]
     gunhand.width = 400;
-    gunhand.heigh = 600;
+}
+function generateCockpitImage() {
+    cockpitL.src = 'assets/images/cockpitL.png'
+    cockpitR.src = 'assets/images/cockpitR.png'
+    cockpitL.width = 1400;
+    cockpitR.width = 1400;
 }
 function generateCommsText() {
     if (camera.currentChunk && camera.canMove && Math.abs(camera.position.z) > 5) {
@@ -604,12 +607,13 @@ const tick = () => {
 
     // //Generate Overlay
     generateGunImage();
+    generateCockpitImage();
     generateHUDText(elapsedTime);
-    generateCommsText();
+    //generateCommsText();
 
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.
     timeOfLastFrame = elapsedTime
 }
-console.log(camera.velocity)
+console.log(sizes)
 tick()
 //#endregion

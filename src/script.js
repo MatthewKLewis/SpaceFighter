@@ -29,6 +29,7 @@ const scene = new THREE.Scene()
 
 //global array instantiations
 let monsters = []
+let debris = []
 let sprites = []
 let powerups = []
 
@@ -36,9 +37,12 @@ let powerups = []
 /*  
 * This section has NPC and STORY info
 */
+
 function randBetween(min, max) { // min and max included
     return Math.floor(Math.random() * (max - min + 1) + min)
 }
+
+let VECTOR_ZERO = new Vector3(0,0,0);
 
 //#endregion
 
@@ -146,11 +150,13 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 
 //Add random space debris
 for (let i = 0; i < 40; i++) {
-    var tempGeo = new THREE.BoxBufferGeometry(randBetween(5,9), randBetween(5,9), randBetween(5,9),)
+    var tempGeo = new THREE.SphereBufferGeometry(randBetween(5,9), randBetween(5,9), randBetween(5,9),)
     var tempDebris = new THREE.Mesh(tempGeo, mCobble)
     tempDebris.position.x = randBetween (-40,40);
     tempDebris.position.y = randBetween (-40,40);
     tempDebris.position.z = randBetween (-40,40);
+    tempDebris.velocity = new Vector3(0,0,0)
+    debris.push(tempDebris)
     scene.add(tempDebris)
 }
 
@@ -162,10 +168,10 @@ directionalLight.position.y = 3;
 scene.add(directionalLight)
 
 //Add Fog
-let fog = new THREE.FogExp2(0x6699cc, 0.02)
+let fog = new THREE.FogExp2(0x000000, 0.02)
 scene.fog = fog;
 //scene.background = skyMap;
-scene.background = new THREE.Color(0x6699cc)
+scene.background = new THREE.Color(0x000000)
 
 //#endregion
 
@@ -220,6 +226,7 @@ camera.guns = [
 ]
 
 camera.velocity = new THREE.Vector3(0,0,0);
+camera.acceleration = 0.15;
 
 // Raycaster
 const rayCaster = new THREE.Raycaster();
@@ -331,10 +338,13 @@ document.body.addEventListener('click', () => {
             gunshot.play()
             camera.guns[camera.currentGun].roundsChambered--;
             camera.guns[camera.currentGun].timeLastFired = Date.now()
-
             gunhand.classList.add('fire-animation')
             setTimeout(()=>{gunhand.classList.remove('fire-animation')}, 250)
-
+            var arrow = new THREE.ArrowHelper( camera.getWorldDirection(camera.forward), camera.getWorldPosition(camera.position), 100, 0xffffff );
+            arrow.cone.visible = false;
+            arrow.line.scale.x = 5
+            console.log(arrow)
+            scene.add( arrow );
             rayCaster.setFromCamera(mousePosition, camera);
             const intersects = rayCaster.intersectObjects(scene.children);
             //console.log(intersects)
@@ -346,7 +356,6 @@ document.body.addEventListener('click', () => {
                     sprites.push(blood)
                     scene.add(blood);
                 } else if (intersects[0].object.type == "Mesh") {
-                    //console.log('kerang')
                     ricochet.play()
                 } else {
                     console.log(intersects[0])
@@ -375,7 +384,7 @@ var ALLOW_FWD = true;
 var ALLOW_BACK = true;
 var ALLOW_LEFT = true;
 var ALLOW_RIGHT = true;
-let BARRIER_DISTANCE = 0.5;
+let BARRIER_DISTANCE = 4;
 function acceptPlayerInputs() {
 
     if (camera.health <= 0) {
@@ -395,7 +404,9 @@ function acceptPlayerInputs() {
     fwdCaster.set(camera.position, camera.forward);
     var fwdIntersects = fwdCaster.intersectObjects(scene.children);
     if (fwdIntersects.length > 0) {
-        if (fwdIntersects[0].distance < BARRIER_DISTANCE && fwdIntersects[0].object.flavor == "wall") {
+        if (fwdIntersects[0].distance < BARRIER_DISTANCE) {
+            console.log('wall hit')
+            fwdIntersects[0].object.velocity = camera.velocity
             ALLOW_FWD = false;
         }
     }
@@ -403,7 +414,8 @@ function acceptPlayerInputs() {
     bckCaster.set(camera.position, new Vector3(-camera.forward.x, camera.forward.y, -camera.forward.z));
     var bckIntersects = bckCaster.intersectObjects(scene.children);
     if (bckIntersects.length > 0) {
-        if (bckIntersects[0].distance < BARRIER_DISTANCE && bckIntersects[0].object.flavor == "wall") {
+        if (bckIntersects[0].distance < BARRIER_DISTANCE) {
+            console.log('wall hit')
             ALLOW_BACK = false;
         }
     }
@@ -411,7 +423,8 @@ function acceptPlayerInputs() {
     lftCaster.set(camera.position, camera.left);
     var lftIntersects = lftCaster.intersectObjects(scene.children);
     if (lftIntersects.length > 0) {
-        if (lftIntersects[0].distance < BARRIER_DISTANCE && lftIntersects[0].object.flavor == "wall") {
+        if (lftIntersects[0].distance < BARRIER_DISTANCE) {
+            console.log('wall hit')
             ALLOW_LEFT = false;
         }
     }
@@ -419,26 +432,28 @@ function acceptPlayerInputs() {
     rigCaster.set(camera.position, new Vector3(-camera.left.x, camera.left.y, -camera.left.z));
     var rigIntersects = rigCaster.intersectObjects(scene.children);
     if (rigIntersects.length > 0) {
-        if (rigIntersects[0].distance < BARRIER_DISTANCE && rigIntersects[0].object.flavor == "wall") {
+        if (rigIntersects[0].distance < BARRIER_DISTANCE) {
+            console.log('wall hit')
             ALLOW_RIGHT = false;
         }
     }
 
     if (camera.canMove) {
         if (W_PRESSED && ALLOW_FWD) {
-            camera.velocity = new Vector3(camera.forward.x, camera.forward.y, camera.forward.z);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.forward, camera.acceleration)
         }
         if (S_PRESSED && ALLOW_BACK) {
-            camera.velocity = new Vector3(0,0,0);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.forward.x, -camera.forward.y, -camera.forward.z), camera.acceleration)
         }
         if (A_PRESSED && ALLOW_LEFT) {
-            camera.velocity = new Vector3(camera.left.x, camera.left.y, camera.left.z);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.left, camera.acceleration)
         }
         if (D_PRESSED && ALLOW_RIGHT) {
-            camera.velocity = new Vector3(-camera.left.x, -camera.left.y, -camera.left.z);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.left.x, -camera.left.y, -camera.left.z), camera.acceleration) ;
         }
         if (SPACE_PRESSED) {
-            console.log('jump')
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(VECTOR_ZERO, camera.acceleration) ;
+
         }
         if (E_PRESSED) {
             console.log('interact')
@@ -476,14 +491,6 @@ function createCreatureSprite(name, x, y, z) {
     tempSprite.status = "idle"
     return tempSprite;
 }
-function createPowerupSprite(name, x, y, z) {
-    var tempSprite = new THREE.Sprite(powerupSpriteMaterials.get(name));
-    tempSprite.position.x = x;
-    tempSprite.position.y = y;
-    tempSprite.position.z = z;
-    tempSprite.scale.set(.5, .5)
-    return tempSprite;
-}
 function createEffectSprite(name, x, y, z) {
     var tempSprite = new THREE.Sprite(effectSpriteMaterials.get(name));
     var tempSprite = new THREE.Sprite(tempMat);
@@ -494,13 +501,18 @@ function createEffectSprite(name, x, y, z) {
     tempSprite.lifeSpan = 20
     return tempSprite;
 }
-
 function worldMoves() {
 
     //Velocity
     camera.position.x += camera.velocity.x;
     camera.position.y += camera.velocity.y;
     camera.position.z += camera.velocity.z;
+
+    for (let i = 0; i < debris.length; i++) {
+        debris[i].position.x += debris[i].velocity.x;
+        debris[i].position.y += debris[i].velocity.y;
+        debris[i].position.z += debris[i].velocity.z;
+    }
     
     for (let i = 0; i < sprites.length; i++) {
         sprites[i].timer++;
@@ -597,6 +609,6 @@ const tick = () => {
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.
     timeOfLastFrame = elapsedTime
 }
-console.log(monsters[0])
+console.log(camera.velocity)
 tick()
 //#endregion

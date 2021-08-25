@@ -150,7 +150,7 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 
 //Add random space debris
 for (let i = 0; i < 40; i++) {
-    var tempGeo = new THREE.SphereBufferGeometry(randBetween(5,9), randBetween(5,9), randBetween(5,9),)
+    var tempGeo = new THREE.SphereBufferGeometry(randBetween(1,3), )
     var tempDebris = new THREE.Mesh(tempGeo, mCobble)
     tempDebris.position.x = randBetween (-40,40);
     tempDebris.position.y = randBetween (-40,40);
@@ -170,8 +170,21 @@ scene.add(directionalLight)
 //Add Fog
 let fog = new THREE.FogExp2(0x000000, 0.02)
 scene.fog = fog;
+
 //scene.background = skyMap;
-scene.background = new THREE.Color(0x000000)
+//scene.background = new THREE.Color(0x000000)
+
+const cubeLoader = new THREE.CubeTextureLoader();
+const texture = cubeLoader.load([
+    'assets/images/pos-x.jpg',
+    'assets/images/neg-x.jpg',
+    'assets/images/pos-y.jpg',
+    'assets/images/neg-y.jpg',
+    'assets/images/pos-z.jpg',
+    'assets/images/neg-z.jpg',
+], ()=>{
+    scene.background = texture;
+});
 
 //#endregion
 

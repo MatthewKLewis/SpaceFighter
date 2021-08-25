@@ -602,7 +602,7 @@ const tick = () => {
     // //Generate Overlay
     generateGunImage();
     generateCockpitImage();
-    generateHUDText(elapsedTime);
+    //generateHUDText(elapsedTime);
     //generateCommsText();
 
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.

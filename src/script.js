@@ -539,12 +539,6 @@ const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)
 composer.addPass(renderPass)
 
-// const bokehPass = new BokehPass(scene, camera, {
-//     focus : 1.0,
-//     aperture : 0.025,
-//     maxblur : 0.6,
-// })
-// composer.addPass(bokehPass)
 
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

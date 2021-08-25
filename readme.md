@@ -1,5 +1,5 @@
-# Through the Eye
-An existentialist game.
+# Space Fighter
+3D Gundam Game
 
 ## Run the local server at localhost:8080
 npm run dev

@@ -7,8 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
-import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
+import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
@@ -92,22 +91,10 @@ const loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
 
 //Basic Color Materials
-const mRed = new THREE.MeshBasicMaterial({color: new THREE.Color('red')})
-
-//Textured Materials
-var waterMap = loader.load('assets/images/water2.png')
-var cobbleMap = loader.load('assets/images/tile2.png')
-var wallMap = loader.load('assets/images/wall2.png')
-var skyMap = loader.load('assets/images/sky.png')
-waterMap.magFilter = THREE.NearestFilter;
-cobbleMap.magFilter = THREE.NearestFilter;
-wallMap.magFilter = THREE.NearestFilter;
-const mWater = new THREE.MeshBasicMaterial({ map: waterMap });
-const mCobble = new THREE.MeshBasicMaterial({ map: cobbleMap });
-const mWall = new THREE.MeshBasicMaterial({ map: wallMap });
+const mGrey = new THREE.MeshBasicMaterial({color: new THREE.Color('grey')})
 
 //Gun "Sprites" - really images
-let gunSpriteURLS = ['./assets/images/pistol_1.png', './assets/images/shotgun_1.png', './assets/images/launcher_1.png']
+let gunSpriteURLS = ['./assets/images/pistol_1.png']
 
 //Monster Sprites
 let monsterSpriteMaterials = new Map()
@@ -152,7 +139,7 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 //Add random space debris
 for (let i = 0; i < 40; i++) {
     var tempGeo = new THREE.SphereBufferGeometry(randBetween(1,3), )
-    var tempDebris = new THREE.Mesh(tempGeo, mCobble)
+    var tempDebris = new THREE.Mesh(tempGeo, mGrey)
     tempDebris.position.x = randBetween (-40,40);
     tempDebris.position.y = randBetween (-40,40);
     tempDebris.position.z = randBetween (-40,40);
@@ -162,11 +149,11 @@ for (let i = 0; i < 40; i++) {
 }
 
 //Add light
-let directionalLight = new THREE.AmbientLight(0xffffff, 0.4)
-directionalLight.position.x = 5;
-directionalLight.position.z = 6;
-directionalLight.position.y = 3;
-scene.add(directionalLight)
+// let directionalLight = new THREE.AmbientLight(0xffffff, 0.4)
+// directionalLight.position.x = 5;
+// directionalLight.position.z = 6;
+// directionalLight.position.y = 3;
+// scene.add(directionalLight)
 
 //Add Fog
 // let fog = new THREE.FogExp2(0x000000, 0.02)
@@ -546,26 +533,18 @@ function worldMoves() {
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-renderer.outputEncoding = THREE.sRGBEncoding;
+//renderer.outputEncoding = THREE.sRGBEncoding;
 
 const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)
 composer.addPass(renderPass)
-// const bloomPass = new BloomPass(
-//     1,    // strength
-//     25,   // kernel size
-//     4,    // sigma ?
-//     512,  // blur render target resolution
-// );
-// composer.addPass(bloomPass);
-// const filmPass = new FilmPass(
-//     0.35,   // noise intensity
-//     0.025,  // scanline intensity
-//     648,    // scanline count
-//     false,  // grayscale
-// );
-// filmPass.renderToScreen = true;
-// composer.addPass(filmPass);
+
+// const bokehPass = new BokehPass(scene, camera, {
+//     focus : 1.0,
+//     aperture : 0.025,
+//     maxblur : 0.6,
+// })
+// composer.addPass(bokehPass)
 
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

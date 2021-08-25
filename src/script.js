@@ -4,6 +4,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
+import { FlyControls } from 'three/examples/jsm/controls/FlyControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { GlitchPass } from 'three/examples/jsm/postprocessing/GlitchPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
@@ -30,7 +31,6 @@ const scene = new THREE.Scene()
 let monsters = []
 let sprites = []
 let powerups = []
-var chunksMade = new Map();
 
 //#region [rgba(0, 126, 255, 0.15) ] PURE UTILITY
 /*  
@@ -143,162 +143,15 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 /*  
 * This section sets up the objects to display in the scene.
 */
-const objLoader = new OBJLoader();
-const gltfLoader = new GLTFLoader();
-let CHUNK_SIDE_LENGTH = 10;
-class Chunk {
-    constructor(x, z, tileArray, monsterArray) {
-        this.x = x
-        this.z = z
-        this.tileArray = tileArray
-        this.monsterArray = monsterArray
-        this.name = getAbjadWord(4);
-    }
-}
-class Tile {
-    constructor(x, z, y, i, type, xChunk, zChunk) {
-        this.index = i
-        this.xChunk = xChunk
-        this.zChunk = zChunk
-        this.flavor = type;
-        if (type == 'ground') {
-            this.geometry = new THREE.BoxBufferGeometry(1, 1, 1)
-            this.mesh = new THREE.Mesh(this.geometry, mCobble)
-        } else if (type == 'wall') {
-            this.geometry = new THREE.BoxBufferGeometry(1, 1, 1)
-            this.mesh = new THREE.Mesh(this.geometry, mWall)
-            this.mesh.flavor = type;
-        } else if (type == 'water') {
-            this.geometry = new THREE.BoxBufferGeometry(1, 1, 1)
-            this.mesh = new THREE.Mesh(this.geometry, mWater)
-            this.mesh.flavor = type;
-        } else if (type == 'spawner') {
-            this.geometry = new THREE.BoxBufferGeometry(1, 1, 1)
-            this.mesh = new THREE.Mesh(this.geometry, mRed)
-            this.mesh.flavor = type;
-        }
-        this.mesh.position.x = x;
-        this.mesh.position.z = z;
-        this.mesh.position.y = y;
-    }
-}
-function generateFloorChunkIndex() {
-    var tempIndex = []
-    for (let i = 0; i < (CHUNK_SIDE_LENGTH * CHUNK_SIDE_LENGTH); i++) {
-        tempIndex.push(randBetween(1,20))
-    }
-    tempIndex.reverse()
-    return tempIndex;
-}
-function addChunk(xChunk, zChunk) {
-    var xNewChunkOrigin = xChunk * CHUNK_SIDE_LENGTH;
-    var zNewChunkOrigin = zChunk * CHUNK_SIDE_LENGTH;
-    if (Math.random() > 0.90 && xChunk != 0 && zChunk != 0) { // Value > 1 means never
-        //LOAD CUSTOM CHUNK
-        // //GLBs
-        gltfLoader.load( 'assets/objects/sampleChunk4.glb', function ( gltf ) {
-            var obj = gltf.scene
-            obj.position.x = xNewChunkOrigin + (CHUNK_SIDE_LENGTH / 2) - .5;
-            obj.position.y = .2;
-            obj.position.z = zNewChunkOrigin + (CHUNK_SIDE_LENGTH / 2) - .5;
-            //console.log(obj)
-            scene.add( obj );
-            chunksMade.set(`${xChunk},${zChunk}`, new Chunk(xChunk, zChunk, []));
-        }, undefined, function ( error ) {
-            console.error( error );
-        } );
-    } else {
-        //LOAD TILED CHUNK
-        if (chunksMade.get(`${xChunk},${zChunk}`)) {
-            var existingTileArray = chunksMade.get(`${xChunk},${zChunk}`).tileArray || []
-            for (let i = 0; i < existingTileArray.length; i++) {
-                scene.add(existingTileArray[i].mesh)
-            }
-        } else {
-            var floorIndex = generateFloorChunkIndex();
-            var floorGameObjectArray = []
-            var monsterGameObjectArray = []
 
-            for (let i = 0; i < floorIndex.length; i++) {
-                switch (floorIndex[i]) {
-                    case 1:
-                        var tempFloorTile = new Tile((i % CHUNK_SIDE_LENGTH) + xNewChunkOrigin, (Math.floor(i / CHUNK_SIDE_LENGTH)) + zNewChunkOrigin, 0, i, 'water', 0, 0)
-                        floorGameObjectArray.push(tempFloorTile);
-                        scene.add(tempFloorTile.mesh)
-                        break;
-                    case 2:
-                        var tempFloorTile = new Tile((i % CHUNK_SIDE_LENGTH) + xNewChunkOrigin, (Math.floor(i / CHUNK_SIDE_LENGTH)) + zNewChunkOrigin, 1, i, 'wall', 0, 0)
-                        floorGameObjectArray.push(tempFloorTile);
-                        scene.add(tempFloorTile.mesh)
-                        break;
-                    case 3:
-                        var tempFloorTile = new Tile((i % CHUNK_SIDE_LENGTH) + xNewChunkOrigin, (Math.floor(i / CHUNK_SIDE_LENGTH)) + zNewChunkOrigin, -.1, i, 'spawner', 0, 0)
-                        if (Math.random() > .7) {
-                            var tempMonster = createCreatureSprite('monster', (i % CHUNK_SIDE_LENGTH) + xNewChunkOrigin, 1, (Math.floor(i / CHUNK_SIDE_LENGTH)) + zNewChunkOrigin)
-                            monsterGameObjectArray.push(tempMonster)
-                            monsters.push(tempMonster)
-                            scene.add(tempMonster)
-                        }
-                        floorGameObjectArray.push(tempFloorTile);
-                        scene.add(tempFloorTile.mesh)
-                        break;
-                    default:
-                        var tempFloorTile = new Tile((i % CHUNK_SIDE_LENGTH) + xNewChunkOrigin, (Math.floor(i / CHUNK_SIDE_LENGTH)) + zNewChunkOrigin, Math.random() / 10, i, 'ground', 0, 0)
-                        floorGameObjectArray.push(tempFloorTile);
-                        scene.add(tempFloorTile.mesh)
-                        break;
-                }
-            }
-            chunksMade.set(`${xChunk},${zChunk}`, new Chunk(xChunk, zChunk, floorGameObjectArray, monsterGameObjectArray));
-        }
-    }
-}
-function removeChunk(xChunk, zChunk) {
-    var chunkToDelete = chunksMade.get(`${xChunk},${zChunk}`);
-    for (let i = 0; i < chunkToDelete.tileArray.length; i++) {
-        scene.remove(chunkToDelete.tileArray[i].mesh);
-    }
-    //scene.remove(chunkToDelete.light);
-}
-function addAndRemoveNeighborChunks(xChunk, zChunk, lastXChunk, lastZChunk) {
-    var xDif = xChunk - lastXChunk;
-    var zDif = zChunk - lastZChunk;
-    if (xDif == 1) {
-        addChunk(xChunk + 1, zChunk)
-        addChunk(xChunk + 1, zChunk - 1)
-        addChunk(xChunk + 1, zChunk + 1)
-        removeChunk(xChunk - 2, zChunk)
-        removeChunk(xChunk - 2, zChunk - 1)
-        removeChunk(xChunk - 2, zChunk + 1)
-    } else if (xDif == -1) {
-        addChunk(xChunk - 1, zChunk)
-        addChunk(xChunk - 1, zChunk - 1)
-        addChunk(xChunk - 1, zChunk + 1)
-        removeChunk(xChunk + 2, zChunk)
-        removeChunk(xChunk + 2, zChunk - 1)
-        removeChunk(xChunk + 2, zChunk + 1)
-    }
-    if (zDif == 1) {
-        addChunk(xChunk, zChunk + 1)
-        addChunk(xChunk - 1, zChunk + 1)
-        addChunk(xChunk + 1, zChunk + 1)
-        removeChunk(xChunk, zChunk - 2)
-        removeChunk(xChunk - 1, zChunk - 2)
-        removeChunk(xChunk + 1, zChunk - 2)
-    } else if (zDif == -1) {
-        addChunk(xChunk, zChunk - 1)
-        addChunk(xChunk - 1, zChunk - 1)
-        addChunk(xChunk + 1, zChunk - 1)
-        removeChunk(xChunk, zChunk + 2)
-        removeChunk(xChunk - 1, zChunk + 2)
-        removeChunk(xChunk + 1, zChunk + 2)
-    }
-}
-// Add the starting 9 chunks
-for (let i = -1; i <= 1; i++) {
-    for (let j = -1; j <= 1; j++) {
-        addChunk(i, j)
-    }
+//Add random space debris
+for (let i = 0; i < 40; i++) {
+    var tempGeo = new THREE.BoxBufferGeometry(randBetween(5,9), randBetween(5,9), randBetween(5,9),)
+    var tempDebris = new THREE.Mesh(tempGeo, mCobble)
+    tempDebris.position.x = randBetween (-40,40);
+    tempDebris.position.y = randBetween (-40,40);
+    tempDebris.position.z = randBetween (-40,40);
+    scene.add(tempDebris)
 }
 
 //Add light
@@ -309,7 +162,7 @@ directionalLight.position.y = 3;
 scene.add(directionalLight)
 
 //Add Fog
-let fog = new THREE.FogExp2(0x6699cc, 0.1)
+let fog = new THREE.FogExp2(0x6699cc, 0.02)
 scene.fog = fog;
 //scene.background = skyMap;
 scene.background = new THREE.Color(0x6699cc)
@@ -354,7 +207,6 @@ scene.add(camera)
 camera.forward = new THREE.Vector3(0, 0, -1);
 camera.left = new THREE.Vector3(1, 0, 0)
 camera.up = new THREE.Vector3(0,1,0);
-camera.speed = 0.07;
 camera.heightOffset = 1;
 camera.health = 100;
 camera.canMove = false;
@@ -366,6 +218,8 @@ camera.guns = [
     { name: 'shotgun', damage: 10, roundsChambered: 2, roundsPerReload: 2, roundsTotal: 50, timeLastReloaded: 0, timeLastFired: 0, cooldown: 600 },
     { name: 'rocketLauncher', damage: 40, roundsChambered: 1, roundsPerReload: 1, roundsTotal: 4, timeLastReloaded: 0, timeLastFired: 0, cooldown: 600 },
 ]
+
+camera.velocity = new THREE.Vector3(0,0,0);
 
 // Raycaster
 const rayCaster = new THREE.Raycaster();
@@ -569,43 +423,19 @@ function acceptPlayerInputs() {
             ALLOW_RIGHT = false;
         }
     }
-    // Determine current chunk and tile, despawn faraway chunks
-    var curChunkX = chunksMade.get(`${Math.floor((camera.position.x + 0.5) / CHUNK_SIDE_LENGTH)},${Math.floor((camera.position.z + 0.5) / CHUNK_SIDE_LENGTH)}`).x
-    var curChunkZ = chunksMade.get(`${Math.floor((camera.position.x + 0.5) / CHUNK_SIDE_LENGTH)},${Math.floor((camera.position.z + 0.5) / CHUNK_SIDE_LENGTH)}`).z
-    if (camera.currentChunk && curChunkX != camera.currentChunk.x || curChunkZ != camera.currentChunk.z) {
-        addAndRemoveNeighborChunks(curChunkX, curChunkZ, camera.currentChunk.x, camera.currentChunk.z);
-    }
-    camera.currentChunk = chunksMade.get(`${Math.floor((camera.position.x + 0.5) / CHUNK_SIDE_LENGTH)},${Math.floor((camera.position.z + 0.5) / CHUNK_SIDE_LENGTH)}`)
-    // Postion camera based on height and ducking
-    if (camera.currentChunk.tileArray.length > 0) {
-        for (let i = 0; i < camera.currentChunk.tileArray.length; i++) {
-            if (camera.currentChunk.tileArray[i].mesh.position.x == Math.floor(camera.position.x + .5) && camera.currentChunk.tileArray[i].mesh.position.z == Math.floor(camera.position.z + .5)) {
-                camera.currentTile = camera.currentChunk.tileArray[i]
-                if (camera.position.y < camera.currentTile.mesh.position.y + camera.heightOffset) {
-                    //console.log('step up')
-                    camera.position.y = camera.currentTile.mesh.position.y + camera.heightOffset
-                } else if (camera.position.y > camera.currentTile.mesh.position.y + camera.heightOffset) {
-                    //console.log('step down')
-                    camera.position.y = camera.currentTile.mesh.position.y + camera.heightOffset
-                }
-            }
-        }
-    } else {
-        camera.position.y = 1.2
-    }
 
     if (camera.canMove) {
         if (W_PRESSED && ALLOW_FWD) {
-            controls.moveForward(camera.speed);
+            camera.velocity = new Vector3(camera.forward.x, camera.forward.y, camera.forward.z);
         }
         if (S_PRESSED && ALLOW_BACK) {
-            controls.moveForward(-camera.speed);
+            camera.velocity = new Vector3(0,0,0);
         }
         if (A_PRESSED && ALLOW_LEFT) {
-            controls.moveRight(-camera.speed);
+            camera.velocity = new Vector3(camera.left.x, camera.left.y, camera.left.z);
         }
         if (D_PRESSED && ALLOW_RIGHT) {
-            controls.moveRight(camera.speed);
+            camera.velocity = new Vector3(-camera.left.x, -camera.left.y, -camera.left.z);
         }
         if (SPACE_PRESSED) {
             console.log('jump')
@@ -633,16 +463,6 @@ function acceptPlayerInputs() {
 /*  
 * This section sets up the camera and player.
 */
-function createButton(x, y, z, callback) {
-    var buttonGeo = new THREE.BoxBufferGeometry(.2, .2, .2)
-    var buttonMesh = new THREE.Mesh(buttonGeo, mRed)
-    buttonMesh.position.x = x
-    buttonMesh.position.y = y
-    buttonMesh.position.z = z
-    buttonMesh.callback = callback;
-    buttonMesh.flavor = "button"
-    return buttonMesh;
-}
 function createCreatureSprite(name, x, y, z) {
     var tempSprite = new THREE.Sprite(monsterSpriteMaterials.get(name));
     tempSprite.rayCaster = new THREE.Raycaster(new Vector3(x,y,z), new Vector3(x, y, z - 1));
@@ -676,50 +496,12 @@ function createEffectSprite(name, x, y, z) {
 }
 
 function worldMoves() {
-    //monster decisions
-    if (Math.random() > .95) {
-        for (let i = 0; i < monsters.length; i++) {
-            var randomChoice = randBetween(1, 5)
-            switch (randomChoice) {
-                case 1:
-                    monsters[i].status = "move forward"
-                    break;
-                case 2:
-                    monsters[i].status = "move backward"
-                    break;
-                case 3:
-                    monsters[i].status = "move left"
-                    break;
-                case 4:
-                    monsters[i].status = "move right"
-                    break;
-                case 5:
-                    monsters[i].status = "idle"
-                    break;
-            }
-        }
-    }
-    //monster actions
-    for (let i = 0; i < monsters.length; i++) {
-        if (monsters[i].health <= 0) {
-            scene.remove(monsters[i])
-            monsters.splice(i,1);
-        }
 
-        if (monsters[i].status == 'idle') {
-            if (monsters[i].position.distanceTo(camera.position) < 8 && Math.random() > .95) {
-                //console.log('ATTACK FROM ' + monsters[i].name)
-            }
-        } else if (monsters[i].status == 'move forward') {
-            monsters[i].position.z += .01;
-        } else if (monsters[i].status == 'move backward') {
-            monsters[i].position.z -= .01;
-        } else if (monsters[i].status == 'move left') {
-            monsters[i].position.x += .01;
-        } else if (monsters[i].status == 'move right') {
-            monsters[i].position.x -= .01;
-        }
-    }
+    //Velocity
+    camera.position.x += camera.velocity.x;
+    camera.position.y += camera.velocity.y;
+    camera.position.z += camera.velocity.z;
+    
     for (let i = 0; i < sprites.length; i++) {
         sprites[i].timer++;
         if (sprites[i].timer == sprites[i].lifeSpan) {
@@ -728,16 +510,6 @@ function worldMoves() {
         }
     }
 }
-
-//Add a button
-scene.add(createButton(0, 1, 4, ()=>{
-    camera.health -= 20;
-}));
-
-scene.add(createButton(0, 1, -4, ()=>{
-    console.log('message')
-}));
-
 //#endregion
 
 //#region [rgba(25, 128, 128, 0.15) ] RENDERER (VIEW)
@@ -768,11 +540,7 @@ function generateHUDText(elapsedTime) {
     stats.innerText = "FPS: " + (1 / (elapsedTime - timeOfLastFrame)).toFixed(0) + "\n"
     stats.innerText += "Position: " + camera.position.x.toFixed(3) + " " + camera.position.y.toFixed(3) + " " + camera.position.z.toFixed(3) + "\n"
     stats.innerText += "Vector Fwd: " + camera.forward.x.toFixed(3) + ", " + camera.forward.y.toFixed(3) + ", " + camera.forward.z.toFixed(3) + "\n"
-    if (camera.currentChunk) {
-        stats.innerText += "Current Chunk: " + camera.currentChunk.name + " (" + camera.currentChunk.x + ", " + camera.currentChunk.z + ") \n"
-        stats.innerText += "Current Tile Index: " + camera.currentTile.index + " " + camera.currentTile.flavor + "\n"
-        stats.innerText += "Current Tile Height: " + camera.currentTile.mesh.position.y + "\n"
-    }
+    stats.innerText += "Velocity: " + camera.velocity.x.toFixed(3) + ", " + camera.velocity.y.toFixed(3) + ", " + camera.velocity.z.toFixed(3) + "\n"
     if (monsters.length > 0) {
         stats.innerText += "First Monster: " + monsters[0].name + " (" + monsters[0].position.x.toFixed(2) + ", " + monsters[0].position.z.toFixed(2) + ") " + monsters[0].status
     }

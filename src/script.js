@@ -161,12 +161,12 @@ for (let i = 0; i < 40; i++) {
 
 const cubeLoader = new THREE.CubeTextureLoader();
 const texture = cubeLoader.load([
-    'assets/images/pos-x.png',
-    'assets/images/neg-x.png',
-    'assets/images/pos-y.png',
-    'assets/images/neg-y.png',
-    'assets/images/pos-z.png',
-    'assets/images/neg-z.png',
+    'assets/images/skybox/space_ft.png',
+    'assets/images/skybox/space_bk.png',
+    'assets/images/skybox/space_up.png',
+    'assets/images/skybox/space_dn.png',
+    'assets/images/skybox/space_rt.png',
+    'assets/images/skybox/space_lf.png',
 ], ()=>{
     scene.background = texture;
 }, ()=>{
@@ -345,7 +345,6 @@ document.body.addEventListener('click', () => {
             var arrow = new THREE.ArrowHelper( camera.getWorldDirection(camera.forward), camera.getWorldPosition(camera.position), 100, 0xffffff );
             arrow.cone.visible = false;
             arrow.line.scale.x = 5
-            console.log(arrow)
             scene.add( arrow );
             rayCaster.setFromCamera(mousePosition, camera);
             const intersects = rayCaster.intersectObjects(scene.children);
@@ -478,12 +477,10 @@ function acceptPlayerInputs() {
 */
 function createCreatureSprite(name, x, y, z) {
     var tempSprite = new THREE.Sprite(monsterSpriteMaterials.get(name));
-    tempSprite.rayCaster = new THREE.Raycaster(new Vector3(x,y,z), new Vector3(x, y, z - 1));
-    tempSprite.rayCaster.camera = new THREE.PerspectiveCamera();
     tempSprite.position.x = x;
     tempSprite.position.y = y;
     tempSprite.position.z = z;
-    tempSprite.scale.set(1.2, 1.2)
+    tempSprite.scale.set(4, 4)
     tempSprite.name = getName()
     tempSprite.health = 20
     tempSprite.status = "idle"
@@ -505,6 +502,10 @@ function worldMoves() {
     camera.position.y += camera.velocity.y;
     camera.position.z += camera.velocity.z;
 
+    for (let i = 0; i < monsters.length; i++) {
+        monsters[i].position.x += .01        
+    }
+
     for (let i = 0; i < debris.length; i++) {
         debris[i].position.x += debris[i].velocity.x;
         debris[i].position.y += debris[i].velocity.y;
@@ -518,6 +519,12 @@ function worldMoves() {
             sprites.splice(i, 1);
         }
     }
+}
+
+for (let i = 0; i < 3; i++) {
+    var monster = createCreatureSprite('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20))
+    monsters.push(monster);
+    scene.add(monster)
 }
 //#endregion
 
@@ -598,6 +605,5 @@ const tick = () => {
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.
     timeOfLastFrame = elapsedTime
 }
-console.log(sizes)
 tick()
 //#endregion

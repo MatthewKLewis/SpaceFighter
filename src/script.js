@@ -7,12 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { Vector3 } from 'three';
-
-const startingScreen = document.querySelector('#starting-screen')
-const careerStatsElement = document.querySelector('#career-stats')
-const startButtonElements = document.querySelectorAll('.start-button')
 
 const canvas = document.querySelector('canvas.webgl')
 const pointerLock = document.querySelector('#pointer-lock')
@@ -29,15 +24,9 @@ const healthAmmo = document.querySelector('#health-ammo')
 const radar = document.querySelector('#radar')
 
 const scene = new THREE.Scene()
-var careerStats = {
-    money: 0,
-    kills: 0,
-}
-
-
-careerStatsElement.innerText = `Money: ${careerStats.money}, Kills ${careerStats.kills}`
 
 //global instantiations
+let paused = true;
 let level = 1;
 let monsters = []
 let debris = []
@@ -115,8 +104,8 @@ const loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
 
 //Basic Color Materials
-const mGrey = new THREE.MeshBasicMaterial({ color: new THREE.Color('grey') })
-const mPurple = new THREE.MeshBasicMaterial({ color: new THREE.Color('purple') })
+const mGrey = new THREE.MeshToonMaterial({ color: new THREE.Color('grey') })
+const mPurple = new THREE.MeshToonMaterial({ color: new THREE.Color('purple') })
 
 //Monster Sprites
 let monsterSpriteMaterials = new Map()
@@ -170,11 +159,11 @@ for (let i = 0; i < 40; i++) {
 }
 
 //Add light
-// let directionalLight = new THREE.AmbientLight(0xffffff, 0.4)
-// directionalLight.position.x = 5;
-// directionalLight.position.z = 6;
-// directionalLight.position.y = 3;
-// scene.add(directionalLight)
+let directionalLight = new THREE.AmbientLight(0xffffff, 0.4)
+directionalLight.position.x = 0;
+directionalLight.position.z = 0;
+directionalLight.position.y = 0;
+scene.add(directionalLight)
 
 //Add Fog
 let fog = new THREE.FogExp2(0x000000, 0.02)
@@ -263,6 +252,7 @@ targetMap.magFilter = THREE.NearestFilter;
 targetMap.minFilter = THREE.LinearMipMapLinearFilter;
 var targetMat = new THREE.SpriteMaterial({ map: targetMap });
 var target = new THREE.Sprite(targetMat)
+target.visible = false;
 target.scale.set(0.05, 0.05)
 target.position.x = 0;
 target.position.x = 0;
@@ -362,8 +352,12 @@ window.addEventListener('keypress', (e) => {
             rayCaster.setFromCamera(mousePosition, camera);
             const intersects = rayCaster.intersectObjects(scene.children);
             if (intersects[0] && intersects[0].object.type == "Sprite") {
-                console.log('marked ' + intersects[0].object.name)
-                camera.targettedEnemy = intersects[0].object;
+                if (intersects[0].object == target) {
+                    //console.log('marked the mark!')
+                } else {
+                    console.log('marked ' + intersects[0].object.name)
+                    camera.targettedEnemy = intersects[0].object;
+                }
             }
         } 
     } else if (e.key == '1') {
@@ -372,7 +366,6 @@ window.addEventListener('keypress', (e) => {
         //camera.currentGun = 1
     } else if (e.key == '3') {
         //camera.currentGun = 2
-        careerStats.money += 10;
     } else if (e.key == 'p') {
         resetLevel()
     }
@@ -425,10 +418,12 @@ pointerLock.addEventListener('click', () => {
 controls.addEventListener('lock', function () {
     pointerLock.style.display = 'none';
     camera.canMove = true;
+    paused = false;
 });
 controls.addEventListener('unlock', function () {
     pointerLock.style.display = 'block';
     camera.canMove = false;
+    paused = true;
 });
 
 // This is a pseudo-Model class, in that it is called every frame.
@@ -571,8 +566,9 @@ function worldMoves() {
     }
 
     if (camera.targettedEnemy) {
+        target.visible = true;
         var distanceVectorFromPlayer = new Vector3(camera.targettedEnemy.position.x - camera.position.x, 
-            camera.targettedEnemy.position.y - camera.position.y, 
+            camera.targettedEnemy.position.y - camera.position.y,
             camera.targettedEnemy.position.z - camera.position.z).normalize()
 
         target.position.x = camera.position.x + distanceVectorFromPlayer.x
@@ -648,9 +644,11 @@ const tick = () => {
 
     //CONTROLLER
     acceptPlayerInputs();
-
+    
     //MODEL
-    worldMoves();
+    if (!paused) {
+        worldMoves();
+    }
 
     //VIEW
     composer.render(scene, camera)

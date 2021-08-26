@@ -11,19 +11,21 @@ import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 import { Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
-
 const pointerLock = document.querySelector('#pointer-lock')
 pointerLock.height = window.innerHeight;
 pointerLock.src = './assets/images/SplashScreen.png'
+const youDied = document.querySelector('#you-died')
 
 const stats = document.querySelector('#stats')
+
 const popup = document.querySelector('#popup')
-const inventory = document.querySelector('#inventory')
 const icon = document.querySelector('#icon')
 const comms = document.querySelector('#comms')
-const healthAmmo = document.querySelector('#health-ammo')
+
+const inventory = document.querySelector('#inventory')
 const gunhand = document.querySelector('#gunhand')
-const youDied = document.querySelector('#you-died')
+const healthAmmo = document.querySelector('#health-ammo')
+const radar = document.querySelector('#radar')
 
 const scene = new THREE.Scene()
 
@@ -72,7 +74,7 @@ function getAbjadWord(syllables) {
     return tempString;
 }
 function getName() {
-    return NAMES[Math.floor((Math.random() * NAMES.length) + 1)];
+    return NAMES[Math.floor(Math.random() * NAMES.length)];
 }
 const story = [
     "You'll be able to carry yourself through ego death.",
@@ -137,12 +139,12 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 */
 
 //Add random space debris
-for (let i = 0; i < 20; i++) {
-    var tempGeo = new THREE.SphereBufferGeometry(randBetween(1,3), )
+for (let i = 0; i < 40; i++) {
+    var tempGeo = new THREE.BoxBufferGeometry(randBetween(1,5), randBetween(1,5), randBetween(1,5))
     var tempDebris = new THREE.Mesh(tempGeo, mGrey)
-    tempDebris.position.x = randBetween (-40,40);
-    tempDebris.position.y = randBetween (-40,40);
-    tempDebris.position.z = randBetween (-40,40);
+    tempDebris.position.x = randBetween (-90,90);
+    tempDebris.position.y = randBetween (-90,90);
+    tempDebris.position.z = randBetween (-90,90);
     tempDebris.velocity = new Vector3(0,0,0)
     debris.push(tempDebris)
     scene.add(tempDebris)
@@ -207,7 +209,7 @@ const sizes = {
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 const controls = new PointerLockControls(camera, document.body);
 camera.position.x = 0
-camera.position.y = 1.0
+camera.position.y = 0
 camera.position.z = 0
 scene.add(camera)
 
@@ -229,6 +231,18 @@ camera.guns = [
 
 camera.velocity = new THREE.Vector3(0,0,0);
 camera.acceleration = 0.08;
+
+// Enemy0 Tracking Sprite
+var targetMap = new THREE.TextureLoader().load(`assets/images/target.png`);
+targetMap.magFilter = THREE.NearestFilter;
+targetMap.minFilter = THREE.LinearMipMapLinearFilter;
+var targetMat = new THREE.SpriteMaterial({ map: targetMap });
+var target = new THREE.Sprite(targetMat)
+target.scale.set(0.05, 0.05)
+target.position.x = 0;
+target.position.x = 0;
+target.position.z = 1;
+scene.add(target)
 
 // Raycaster
 const rayCaster = new THREE.Raycaster();
@@ -519,6 +533,13 @@ function worldMoves() {
             sprites.splice(i, 1);
         }
     }
+
+    for (let i = 0; i < monsters.length; i++) {
+        var distanceVectorFromPlayer = new Vector3(monsters[i].position.x - camera.position.x, monsters[i].position.y - camera.position.y, monsters[i].position.z - camera.position.z).normalize()
+        target.position.x = camera.position.x + distanceVectorFromPlayer.x
+        target.position.y = camera.position.y + distanceVectorFromPlayer.y
+        target.position.z = camera.position.z + distanceVectorFromPlayer.z
+    }
 }
 
 for (let i = 0; i < 3; i++) {
@@ -544,16 +565,13 @@ composer.addPass(renderPass)
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
-function generateHUDText(elapsedTime) {
+function generateAdminText(elapsedTime) {
     // //STATS
     stats.innerText = "FPS: " + (1 / (elapsedTime - timeOfLastFrame)).toFixed(0) + "\n"
     stats.innerText = "Time: " + elapsedTime.toFixed(0) + "\n"
     stats.innerText += "Position: " + camera.position.x.toFixed(3) + " " + camera.position.y.toFixed(3) + " " + camera.position.z.toFixed(3) + "\n"
     stats.innerText += "Vector Fwd: " + camera.forward.x.toFixed(3) + ", " + camera.forward.y.toFixed(3) + ", " + camera.forward.z.toFixed(3) + "\n"
     stats.innerText += "Velocity: " + camera.velocity.x.toFixed(3) + ", " + camera.velocity.y.toFixed(3) + ", " + camera.velocity.z.toFixed(3) + "\n"
-    if (monsters.length > 0) {
-        stats.innerText += "First Monster: " + monsters[0].name + " (" + monsters[0].position.x.toFixed(2) + ", " + monsters[0].position.z.toFixed(2) + ") " + monsters[0].status
-    }
 
     // //HEALTH AND AMMO
     healthAmmo.innerText = camera.health + " : " + camera.guns[camera.currentGun].roundsChambered + " / " + camera.guns[camera.currentGun].roundsTotal
@@ -574,6 +592,9 @@ function generateCommsText(elapsedTime) {
     } else {
         popup.className = 'hidden'
     }
+}
+function generateRadarImage() {
+    radar.innerText = "RADAR: \n \n"
 }
 //#endregion
 
@@ -598,9 +619,12 @@ const tick = () => {
     //Call tick again after this
     window.requestAnimationFrame(tick)
 
+    // //Admin Overlay
+    generateAdminText(elapsedTime);
+
     // //Generate Overlay
+    generateRadarImage();
     generateGunImage();
-    generateHUDText(elapsedTime);
     generateCommsText(elapsedTime);
 
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.

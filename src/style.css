@@ -37,6 +37,19 @@ hr {
     z-index: 102;
 }
 
+#radar {
+    position: fixed;
+    padding: 10px;
+    top: 40px;
+    right: 40px;
+    z-index: 96;
+    background-color: rgb(118, 255, 221);
+    border-radius: 20px;
+    opacity: 50%;
+    width: 250px;
+    height: 250px;
+}
+
 #gunhand {
     position: fixed;
     bottom: 0;

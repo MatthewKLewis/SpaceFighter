@@ -137,7 +137,7 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 */
 
 //Add random space debris
-for (let i = 0; i < 40; i++) {
+for (let i = 0; i < 20; i++) {
     var tempGeo = new THREE.SphereBufferGeometry(randBetween(1,3), )
     var tempDebris = new THREE.Mesh(tempGeo, mGrey)
     tempDebris.position.x = randBetween (-40,40);
@@ -156,8 +156,8 @@ for (let i = 0; i < 40; i++) {
 // scene.add(directionalLight)
 
 //Add Fog
-// let fog = new THREE.FogExp2(0x000000, 0.02)
-// scene.fog = fog;
+let fog = new THREE.FogExp2(0x000000, 0.02)
+scene.fog = fog;
 
 const cubeLoader = new THREE.CubeTextureLoader();
 const texture = cubeLoader.load([
@@ -222,13 +222,13 @@ camera.currentChunk = 'Unknown'
 camera.currentTile = 0
 camera.currentGun = 0
 camera.guns = [
-    { name: 'pistol', damage: 5, roundsChambered: 6, roundsPerReload: 6, roundsTotal: 30, timeLastReloaded: 0, timeLastFired: 0, cooldown: 600 },
+    { name: 'pistol', damage: 5, roundsChambered: 6, roundsPerReload: 6, roundsTotal: 30, timeLastReloaded: 0, timeLastFired: 0, cooldown: 40 },
     { name: 'shotgun', damage: 10, roundsChambered: 2, roundsPerReload: 2, roundsTotal: 50, timeLastReloaded: 0, timeLastFired: 0, cooldown: 600 },
     { name: 'rocketLauncher', damage: 40, roundsChambered: 1, roundsPerReload: 1, roundsTotal: 4, timeLastReloaded: 0, timeLastFired: 0, cooldown: 600 },
 ]
 
 camera.velocity = new THREE.Vector3(0,0,0);
-camera.acceleration = 0.15;
+camera.acceleration = 0.08;
 
 // Raycaster
 const rayCaster = new THREE.Raycaster();
@@ -541,12 +541,13 @@ const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)
 composer.addPass(renderPass)
 
-
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
 function generateHUDText(elapsedTime) {
     // //STATS
     stats.innerText = "FPS: " + (1 / (elapsedTime - timeOfLastFrame)).toFixed(0) + "\n"
+    stats.innerText = "Time: " + elapsedTime.toFixed(0) + "\n"
     stats.innerText += "Position: " + camera.position.x.toFixed(3) + " " + camera.position.y.toFixed(3) + " " + camera.position.z.toFixed(3) + "\n"
     stats.innerText += "Vector Fwd: " + camera.forward.x.toFixed(3) + ", " + camera.forward.y.toFixed(3) + ", " + camera.forward.z.toFixed(3) + "\n"
     stats.innerText += "Velocity: " + camera.velocity.x.toFixed(3) + ", " + camera.velocity.y.toFixed(3) + ", " + camera.velocity.z.toFixed(3) + "\n"
@@ -561,14 +562,14 @@ function generateGunImage() {
     gunhand.src = gunSpriteURLS[camera.currentGun]
     gunhand.width = 400;
 }
-function generateCommsText() {
-    if (camera.currentChunk && camera.canMove && Math.abs(camera.position.z) > 5) {
+function generateCommsText(elapsedTime) {
+    if (camera.canMove && elapsedTime > 2) {
         popup.className = 'popup'
         if (icon) {
             icon.src = './assets/images/npc1.png'
         }
         if (comms) {
-            comms.innerText = story[Math.min(Math.abs(camera.currentChunk.z), story.length - 1)];
+            comms.innerText = story[0];
         }
     } else {
         popup.className = 'hidden'
@@ -600,7 +601,7 @@ const tick = () => {
     // //Generate Overlay
     generateGunImage();
     generateHUDText(elapsedTime);
-    //generateCommsText();
+    generateCommsText(elapsedTime);
 
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.
     timeOfLastFrame = elapsedTime

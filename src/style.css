@@ -45,20 +45,6 @@ hr {
     filter: blur(4px);
 }
 
-#cockpitL {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 99;
-}
-
-#cockpitR {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    z-index: 98;
-}
-
 .reload-animation {
     animation-duration: 750ms;
     animation-name: reload;
@@ -127,7 +113,7 @@ hr {
     height: 100px;
     padding: 10px;
     border-radius: 10px;
-    z-index: 10;
+    z-index: 100;
 }
 
 .died {

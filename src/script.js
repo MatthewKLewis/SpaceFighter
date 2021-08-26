@@ -85,11 +85,7 @@ function getName() {
     return NAMES[Math.floor(Math.random() * NAMES.length)];
 }
 const story = [
-    "You'll be able to carry yourself through ego death.",
-    "Sounds contradictory? It's not really a well named concept.",
-    "Pass through the dark eye at the center of the universe...",
-    "Give birth to yourself from the inky blackness and be torn apart by the light.",
-    "Feel the membrane on the periphery of the experience. We're not sure what it is except to say, it's you."
+    "We're coming up on a debris field.",
 ]
 //#endregion
 

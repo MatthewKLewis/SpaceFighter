@@ -37,26 +37,25 @@ hr {
     z-index: 102;
 }
 
+#radar {
+    position: fixed;
+    padding: 10px;
+    top: 40px;
+    right: 40px;
+    z-index: 96;
+    background-color: rgb(118, 255, 221);
+    border-radius: 20px;
+    opacity: 50%;
+    width: 250px;
+    height: 250px;
+}
+
 #gunhand {
     position: fixed;
     bottom: 0;
     left: 40%;
     z-index: 97;
     filter: blur(4px);
-}
-
-#cockpitL {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 99;
-}
-
-#cockpitR {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    z-index: 98;
 }
 
 .reload-animation {
@@ -127,7 +126,7 @@ hr {
     height: 100px;
     padding: 10px;
     border-radius: 10px;
-    z-index: 10;
+    z-index: 100;
 }
 
 .died {

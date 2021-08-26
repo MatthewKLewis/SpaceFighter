@@ -22,8 +22,6 @@ const inventory = document.querySelector('#inventory')
 const icon = document.querySelector('#icon')
 const comms = document.querySelector('#comms')
 const healthAmmo = document.querySelector('#health-ammo')
-const cockpitL = document.querySelector('#cockpitL')
-const cockpitR = document.querySelector('#cockpitR')
 const gunhand = document.querySelector('#gunhand')
 const youDied = document.querySelector('#you-died')
 
@@ -89,20 +87,21 @@ const story = [
 /*  
 * This section sets up a map for basic color materials, as well as a few textured materials.
 */
+//Gun Images
+let gunSpriteURLS = ['./assets/images/guns/pistol_1.png']
+
 const loader = new THREE.TextureLoader();
 loader.crossOrigin = '';
 
 //Basic Color Materials
 const mGrey = new THREE.MeshBasicMaterial({color: new THREE.Color('grey')})
-
-//Gun "Sprites" - really images
-let gunSpriteURLS = ['./assets/images/pistol_1.png']
+const mPurple = new THREE.MeshBasicMaterial({color: new THREE.Color('purple')})
 
 //Monster Sprites
 let monsterSpriteMaterials = new Map()
-let monsterSpriteURLS = ['monster']
+let monsterSpriteURLS = ['enemy1']
 for (let i = 0; i < monsterSpriteURLS.length; i++) {
-    var tempMap = new THREE.TextureLoader().load(`assets/images/${monsterSpriteURLS[i]}.png`);
+    var tempMap = new THREE.TextureLoader().load(`assets/images/enemies/${monsterSpriteURLS[i]}.png`);
     tempMap.magFilter = THREE.NearestFilter;
     tempMap.minFilter = THREE.LinearMipMapLinearFilter;
     var tempMat = new THREE.SpriteMaterial({ map: tempMap });
@@ -130,7 +129,6 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
     var tempMat = new THREE.SpriteMaterial({ map: tempMap });
     effectSpriteMaterials.set(effectSpriteURLS[i], tempMat);
 }
-
 //#endregion
 
 //#region [rgba(128, 25, 25, 0.15) ] SCENERY
@@ -356,9 +354,9 @@ document.body.addEventListener('click', () => {
                 if (intersects[0].object.type == "Sprite") {
                     console.log(intersects[0])
                     intersects[0].object.health -= camera.guns[camera.currentGun].damage;
-                    var blood = createEffectSprite('blood1', intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
-                    sprites.push(blood)
-                    scene.add(blood);
+                    //var blood = createEffectSprite('blood1', intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
+                    //sprites.push(blood)
+                    //scene.add(blood);
                 } else if (intersects[0].object.type == "Mesh") {
                     ricochet.play()
                 } else {
@@ -408,7 +406,7 @@ function acceptPlayerInputs() {
     fwdCaster.set(camera.position, camera.forward);
     var fwdIntersects = fwdCaster.intersectObjects(scene.children);
     if (fwdIntersects.length > 0) {
-        if (fwdIntersects[0].distance < BARRIER_DISTANCE) {
+        if (fwdIntersects[0].distance < BARRIER_DISTANCE && fwdIntersects[0].object.type == 'Mesh') {
             fwdIntersects[0].object.velocity = camera.velocity
             ALLOW_FWD = false;
         }
@@ -417,7 +415,7 @@ function acceptPlayerInputs() {
     bckCaster.set(camera.position, new Vector3(-camera.forward.x, camera.forward.y, -camera.forward.z));
     var bckIntersects = bckCaster.intersectObjects(scene.children);
     if (bckIntersects.length > 0) {
-        if (bckIntersects[0].distance < BARRIER_DISTANCE) {
+        if (bckIntersects[0].distance < BARRIER_DISTANCE && bckIntersects[0].object.type == 'Mesh') {
             ALLOW_BACK = false;
         }
     }
@@ -425,7 +423,7 @@ function acceptPlayerInputs() {
     lftCaster.set(camera.position, camera.left);
     var lftIntersects = lftCaster.intersectObjects(scene.children);
     if (lftIntersects.length > 0) {
-        if (lftIntersects[0].distance < BARRIER_DISTANCE) {
+        if (lftIntersects[0].distance < BARRIER_DISTANCE && lftIntersects[0].object.type == 'Mesh') {
             ALLOW_LEFT = false;
         }
     }
@@ -433,7 +431,7 @@ function acceptPlayerInputs() {
     rigCaster.set(camera.position, new Vector3(-camera.left.x, camera.left.y, -camera.left.z));
     var rigIntersects = rigCaster.intersectObjects(scene.children);
     if (rigIntersects.length > 0) {
-        if (rigIntersects[0].distance < BARRIER_DISTANCE) {
+        if (rigIntersects[0].distance < BARRIER_DISTANCE && rigIntersects[0].object.type == 'Mesh') {
             ALLOW_RIGHT = false;
         }
     }
@@ -502,7 +500,6 @@ function createEffectSprite(name, x, y, z) {
     return tempSprite;
 }
 function worldMoves() {
-
     //Velocity
     camera.position.x += camera.velocity.x;
     camera.position.y += camera.velocity.y;
@@ -557,12 +554,6 @@ function generateGunImage() {
     gunhand.src = gunSpriteURLS[camera.currentGun]
     gunhand.width = 400;
 }
-function generateCockpitImage() {
-    cockpitL.src = 'assets/images/cockpitL.png'
-    cockpitR.src = 'assets/images/cockpitR.png'
-    cockpitL.width = 1400;
-    cockpitR.width = 1400;
-}
 function generateCommsText() {
     if (camera.currentChunk && camera.canMove && Math.abs(camera.position.z) > 5) {
         popup.className = 'popup'
@@ -601,8 +592,7 @@ const tick = () => {
 
     // //Generate Overlay
     generateGunImage();
-    generateCockpitImage();
-    //generateHUDText(elapsedTime);
+    generateHUDText(elapsedTime);
     //generateCommsText();
 
     //This will be a number of milliseconds slower than elapsed time at the beginning of next frame.

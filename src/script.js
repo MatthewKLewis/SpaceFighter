@@ -186,6 +186,13 @@ directionalLight.position.y = 10;
 directionalLight.lookAt(0,0,0)
 scene.add(directionalLight)
 
+let directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
+directionalLight2.position.x = 100;
+directionalLight2.position.z = 20;
+directionalLight2.position.y = -10;
+directionalLight2.lookAt(0,0,0)
+scene.add(directionalLight2)
+
 //Add Fog
 let fog = new THREE.FogExp2(0x000000, 0.02)
 scene.fog = fog;

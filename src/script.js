@@ -8,7 +8,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { Vector3 } from 'three';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { Vector2, Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
 const pointerLock = document.querySelector('#pointer-lock')
@@ -621,7 +622,9 @@ const renderer = new THREE.WebGLRenderer({
 
 const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)
+const bloompass =  new UnrealBloomPass(new Vector2(1024, 1024), 1, 1, 1)
 composer.addPass(renderPass)
+composer.addPass(bloompass)
 
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

@@ -107,11 +107,16 @@ loader.crossOrigin = '';
 const mGrey = new THREE.MeshToonMaterial({ color: new THREE.Color('grey') })
 const mPurple = new THREE.MeshToonMaterial({ color: new THREE.Color('purple') })
 
-//Picture Texture Materials
-var scrapMap = new THREE.TextureLoader().load(`assets/models/spaceDebrisDiffuse.png`);
-scrapMap.magFilter = THREE.NearestFilter;
-scrapMap.minFilter = THREE.LinearMipMapLinearFilter;
-var scrapMat = new THREE.MeshLambertMaterial({ map: scrapMap });
+//Load Picture Materials into the Map
+let objMaterials = new Map()
+let objURLS = ['spaceDebris1']
+for (let i = 0; i < objURLS.length; i++) {
+    var tempMap = new THREE.TextureLoader().load(`assets/models/${objURLS[i]}Diffuse.png`);
+    tempMap.magFilter = THREE.NearestFilter;
+    tempMap.minFilter = THREE.LinearMipMapLinearFilter;
+    var tempMat = new THREE.MeshLambertMaterial({ map: tempMap });
+    objMaterials.set(objURLS[i], tempMat);
+}
 
 //Monster Sprites
 let monsterSpriteMaterials = new Map()
@@ -151,36 +156,27 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 /*  
 * This section sets up the objects to display in the scene.
 */
-
-//Add random space cubes
-
-
-for (let i = 0; i < 10; i++) {
-    var tempGeo = new THREE.BoxBufferGeometry(randBetween(1, 5), randBetween(1, 5), randBetween(1, 5))
-    var tempDebris = new THREE.Mesh(tempGeo, mGrey)
-    tempDebris.position.x = randBetween(-90, 90);
-    tempDebris.position.y = randBetween(-90, 90);
-    tempDebris.position.z = randBetween(-90, 90);
-    tempDebris.velocity = new Vector3(0, 0, 0)
-    debris.push(tempDebris)
-    scene.add(tempDebris)
+var objLoader = new OBJLoader();
+var objURLs = ['spaceDebris1']
+function addObjScenery(objName) {
+    objLoader.load(`assets/models/${objName}.obj`, function (obj) {
+        obj.traverse(function (child) {
+            if (child instanceof THREE.Mesh) {
+                child.material = objMaterials.get(objName);
+                child.position.x = randBetween(-20, 20)
+                child.position.y = randBetween(-20, 20)
+                child.position.z = randBetween(-20, 20)
+                child.velocity = new Vector3(0,0,0)
+                debris.push(child)
+                scene.add(child);
+            }
+        });
+    });
 }
 
-// // Add 1 space debris
-var objLoader = new OBJLoader();
-objLoader.load('assets/models/spaceDebris1obj.obj', function (obj) {
-    obj.traverse(function (child) {
-        if (child instanceof THREE.Mesh) {
-            child.material = scrapMat;
-            child.position.x = randBetween(-20, 20)
-            child.position.y = randBetween(-20, 20)
-            child.position.z = randBetween(-20, 20)
-            child.velocity = new Vector3(0,0,0)
-            debris.push(child)
-            scene.add(child);
-        }
-    });
-});
+for (let i = 0; i < 20; i++) {
+    addObjScenery('spaceDebris1')
+}
 
 //Add light
 let directionalLight = new THREE.DirectionalLight(0xffffff, 0.4)
@@ -243,7 +239,7 @@ const sizes = {
     height: window.innerHeight
 }
 // Camera Built-in Properties
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 400)
 const controls = new PointerLockControls(camera, document.body);
 camera.position.x = 0
 camera.position.y = 0
@@ -614,7 +610,7 @@ for (let i = 0; i < 3; i++) {
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-renderer.outputEncoding = THREE.sRGBEncoding;
+//renderer.outputEncoding = THREE.sRGBEncoding;
 
 const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)

@@ -2,6 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -106,6 +107,12 @@ loader.crossOrigin = '';
 const mGrey = new THREE.MeshToonMaterial({ color: new THREE.Color('grey') })
 const mPurple = new THREE.MeshToonMaterial({ color: new THREE.Color('purple') })
 
+//Picture Texture Materials
+var scrapMap = new THREE.TextureLoader().load(`assets/models/spaceDebrisDiffuse.png`);
+scrapMap.magFilter = THREE.NearestFilter;
+scrapMap.minFilter = THREE.LinearMipMapLinearFilter;
+var scrapMat = new THREE.MeshLambertMaterial({ map: scrapMap });
+
 //Monster Sprites
 let monsterSpriteMaterials = new Map()
 let monsterSpriteURLS = ['enemy1']
@@ -145,8 +152,10 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 * This section sets up the objects to display in the scene.
 */
 
-//Add random space debris
-for (let i = 0; i < 40; i++) {
+//Add random space cubes
+
+
+for (let i = 0; i < 10; i++) {
     var tempGeo = new THREE.BoxBufferGeometry(randBetween(1, 5), randBetween(1, 5), randBetween(1, 5))
     var tempDebris = new THREE.Mesh(tempGeo, mGrey)
     tempDebris.position.x = randBetween(-90, 90);
@@ -157,11 +166,28 @@ for (let i = 0; i < 40; i++) {
     scene.add(tempDebris)
 }
 
+// // Add 1 space debris
+var objLoader = new OBJLoader();
+objLoader.load('assets/models/spaceDebris1obj.obj', function (obj) {
+    obj.traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+            child.material = scrapMat;
+            child.position.x = randBetween(-20, 20)
+            child.position.y = randBetween(-20, 20)
+            child.position.z = randBetween(-20, 20)
+            child.velocity = new Vector3(0,0,0)
+            debris.push(child)
+            scene.add(child);
+        }
+    });
+});
+
 //Add light
-let directionalLight = new THREE.AmbientLight(0xffffff, 0.4)
-directionalLight.position.x = 0;
-directionalLight.position.z = 0;
-directionalLight.position.y = 0;
+let directionalLight = new THREE.DirectionalLight(0xffffff, 0.4)
+directionalLight.position.x = -100;
+directionalLight.position.z = 20;
+directionalLight.position.y = 10;
+directionalLight.lookAt(0,0,0)
 scene.add(directionalLight)
 
 //Add Fog
@@ -354,7 +380,6 @@ window.addEventListener('keypress', (e) => {
                 if (intersects[0].object == target) {
                     //console.log('marked the mark!')
                 } else {
-                    console.log('marked ' + intersects[0].object.name)
                     camera.targettedEnemy = intersects[0].object;
                 }
             }
@@ -394,7 +419,6 @@ document.body.addEventListener('click', () => {
             //console.log(intersects)
             if (intersects[0]) {
                 if (intersects[0].object.type == "Sprite") {
-                    console.log(intersects[0])
                     intersects[0].object.health -= camera.guns[camera.currentGun].damage;
                     //var blood = createEffectSprite('blood1', intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
                     //sprites.push(blood)
@@ -590,7 +614,7 @@ for (let i = 0; i < 3; i++) {
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-//renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputEncoding = THREE.sRGBEncoding;
 
 const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)

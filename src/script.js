@@ -85,7 +85,10 @@ function getName() {
     return NAMES[Math.floor(Math.random() * NAMES.length)];
 }
 const story = [
-    "We're coming up on a debris field.",
+    ["Dispatch:", "We're coming up on a debris field."],
+    ["Dispatch:", "Be on the lookout for raiders."],
+    ["Malcolm:", "Why do we always use open unencrypted vidcomm?"],
+    ["Dispatch:", "We're coming up on a debris field."],
 ]
 //#endregion
 

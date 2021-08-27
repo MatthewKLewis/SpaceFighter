@@ -8,7 +8,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
 import { Vector2, Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
@@ -180,18 +180,17 @@ for (let i = 0; i < 20; i++) {
 }
 
 //Add light
-let directionalLight = new THREE.DirectionalLight(0xffffff, 0.4)
+let directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)
+let directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.8)
 directionalLight.position.x = -100;
 directionalLight.position.z = 20;
 directionalLight.position.y = 10;
-directionalLight.lookAt(0,0,0)
-scene.add(directionalLight)
-
-let directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
 directionalLight2.position.x = 100;
-directionalLight2.position.z = 20;
+directionalLight2.position.z = 60;
 directionalLight2.position.y = -10;
+directionalLight.lookAt(0,0,0)
 directionalLight2.lookAt(0,0,0)
+scene.add(directionalLight)
 scene.add(directionalLight2)
 
 //Add Fog
@@ -273,7 +272,7 @@ camera.guns = [
 camera.velocity = new THREE.Vector3(0, 0, 0);
 camera.acceleration = 0.08;
 
-// Enemy0 Tracking Sprite
+// Enemy Tracking
 camera.targettedEnemy = null
 
 var targetMap = new THREE.TextureLoader().load(`assets/images/target.png`);
@@ -622,9 +621,9 @@ const renderer = new THREE.WebGLRenderer({
 
 const composer = new EffectComposer(renderer)
 const renderPass = new RenderPass(scene, camera)
-const bloompass =  new UnrealBloomPass(new Vector2(1024, 1024), 1, 1, 1)
+//const bloompass =  new BloomPass(1, 1, 1, 1)
 composer.addPass(renderPass)
-composer.addPass(bloompass)
+//composer.addPass(bloompass)
 
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

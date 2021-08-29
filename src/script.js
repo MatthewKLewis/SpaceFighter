@@ -2,8 +2,6 @@ import './style.css'
 import * as THREE from 'three'
 
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
@@ -110,7 +108,7 @@ const mPurple = new THREE.MeshToonMaterial({ color: new THREE.Color('purple') })
 
 //Load Picture Materials into the Map
 let objMaterials = new Map()
-let objURLS = ['spaceDebris1']
+let objURLS = ['spaceDebris1', 'spaceHull']
 for (let i = 0; i < objURLS.length; i++) {
     var tempMap = new THREE.TextureLoader().load(`assets/models/${objURLS[i]}Diffuse.png`);
     tempMap.magFilter = THREE.NearestFilter;
@@ -158,15 +156,18 @@ for (let i = 0; i < effectSpriteURLS.length; i++) {
 * This section sets up the objects to display in the scene.
 */
 var objLoader = new OBJLoader();
-var objURLs = ['spaceDebris1']
+var objURLs = ['spaceDebris1', 'spaceHull']
 function addObjScenery(objName) {
     objLoader.load(`assets/models/${objName}.obj`, function (obj) {
         obj.traverse(function (child) {
             if (child instanceof THREE.Mesh) {
                 child.material = objMaterials.get(objName);
-                child.position.x = randBetween(-20, 20)
-                child.position.y = randBetween(-20, 20)
-                child.position.z = randBetween(-20, 20)
+                child.position.x = randBetween(-80, 80)
+                child.position.y = randBetween(-80, 80)
+                child.position.z = randBetween(-80, 80)
+                child.rotation.x = randBetween(-3, 3)
+                child.rotation.y = randBetween(-3, 3)
+                child.rotation.z = randBetween(-3, 3)
                 child.velocity = new Vector3(0,0,0)
                 debris.push(child)
                 scene.add(child);
@@ -175,9 +176,12 @@ function addObjScenery(objName) {
     });
 }
 
-for (let i = 0; i < 20; i++) {
-    addObjScenery('spaceDebris1')
+for (let i = 0; i < objURLs.length; i++) {
+    for (let j = 0; j < 20; j++) {
+        addObjScenery(objURLs[i])
+    }
 }
+
 
 //Add light
 let directionalLight = new THREE.DirectionalLight(0xffffff, 0.5)

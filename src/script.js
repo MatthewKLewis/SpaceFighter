@@ -195,8 +195,8 @@ scene.add(directionalLight)
 scene.add(directionalLight2)
 
 //Add Fog
-let fog = new THREE.FogExp2(0x000000, 0.02)
-scene.fog = fog;
+// let fog = new THREE.FogExp2(0x000000, 0.02)
+// scene.fog = fog;
 
 if (level == 1) {
     const cubeLoader = new THREE.CubeTextureLoader();
@@ -380,7 +380,7 @@ window.addEventListener('keypress', (e) => {
         if (camera.canMove && Date.now() > camera.guns[0].timeLastFired + camera.guns[0].cooldown) {
             rayCaster.setFromCamera(mousePosition, camera);
             const intersects = rayCaster.intersectObjects(scene.children);
-            if (intersects[0] && intersects[0].object.type == "Sprite") {
+            if (intersects[0] && intersects[0].object.type == "Mesh") {
                 if (intersects[0].object == target) {
                     //console.log('marked the mark!')
                 } else {
@@ -429,7 +429,8 @@ document.body.addEventListener('click', () => {
                     //scene.add(blood);
                 } else if (intersects[0].object.type == "Mesh") {
                     if (intersects[0].object.category = "monster") {
-                        intersects[0].object.health -= camera.guns[camera.currentGun].damage;
+                        //console.log(intersects[0])
+                        intersects[0].object.loseHealth(camera.guns[camera.currentGun].damage);
                     } else {
                         ricochet.play()
                     }
@@ -553,7 +554,7 @@ function acceptPlayerInputs() {
 * This section sets up the camera and player.
 */
 class Monster {
-    constructor(name, x, y, z) {
+    constructor(name, x, y, z, i) {
         this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(5,5,5), mPurple)
         this.mesh.position.x = x;
         this.mesh.position.y = y;
@@ -563,6 +564,15 @@ class Monster {
         this.mesh.category = 'monster'
         this.mesh.name = getAbjadWord(4)
         this.mesh.status = 'idle'
+        this.mesh.indexInMonsterArray = i
+        this.mesh.loseHealth = (loss) => {
+            this.mesh.health -= loss;
+            if (this.mesh.health <= 0) {
+                monsters.splice(i, 1);
+                scene.remove(this.mesh);
+                console.log('killed ' + this.mesh.name)
+            }
+        }
     }
 }
 function createEffectSprite(name, x, y, z) {
@@ -617,7 +627,7 @@ function worldMoves() {
 }
 
 for (let i = 0; i < 3; i++) {
-    var monster = new Monster('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20))
+    var monster = new Monster('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20), i)
     monsters.push(monster);
     scene.add(monster.mesh)
 }

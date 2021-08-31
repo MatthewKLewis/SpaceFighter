@@ -1,12 +1,9 @@
 import './style.css'
 import * as THREE from 'three'
-
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
 import { Vector2, Vector3 } from 'three';
 
 const canvas = document.querySelector('canvas.webgl')
@@ -176,7 +173,7 @@ function addObjScenery(objName) {
     });
 }
 
-for (let i = 0; i < objURLs.length; i++) {
+for (let i = 0; i <= objURLs.length; i++) {
     for (let j = 0; j < 20; j++) {
         addObjScenery(objURLs[i])
     }
@@ -462,6 +459,7 @@ var ALLOW_BACK = true;
 var ALLOW_LEFT = true;
 var ALLOW_RIGHT = true;
 let BARRIER_DISTANCE = 4;
+let SPEED_DOWN_SCALAR = .4
 function acceptPlayerInputs() {
 
     if (camera.health <= 0) {
@@ -513,16 +511,16 @@ function acceptPlayerInputs() {
 
     if (camera.canMove) {
         if (W_PRESSED && ALLOW_FWD) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.forward, camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.forward.multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
         }
         if (S_PRESSED && ALLOW_BACK) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.forward.x, -camera.forward.y, -camera.forward.z), camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.forward.x, -camera.forward.y, -camera.forward.z).multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
         }
         if (A_PRESSED && ALLOW_LEFT) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.left, camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.left.multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
         }
         if (D_PRESSED && ALLOW_RIGHT) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.left.x, -camera.left.y, -camera.left.z), camera.acceleration);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.left.x, -camera.left.y, -camera.left.z).multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration);
         }
         if (SPACE_PRESSED) {
             camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(VECTOR_ZERO, camera.acceleration);

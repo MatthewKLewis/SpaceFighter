@@ -423,12 +423,16 @@ document.body.addEventListener('click', () => {
             //console.log(intersects)
             if (intersects[0]) {
                 if (intersects[0].object.type == "Sprite") {
-                    intersects[0].object.health -= camera.guns[camera.currentGun].damage;
+                    //intersects[0].object.health -= camera.guns[camera.currentGun].damage;
                     //var blood = createEffectSprite('blood1', intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
                     //sprites.push(blood)
                     //scene.add(blood);
                 } else if (intersects[0].object.type == "Mesh") {
-                    ricochet.play()
+                    if (intersects[0].object.category = "monster") {
+                        intersects[0].object.health -= camera.guns[camera.currentGun].damage;
+                    } else {
+                        ricochet.play()
+                    }
                 } else {
                     console.log(intersects[0])
                 }
@@ -469,8 +473,8 @@ function acceptPlayerInputs() {
     }
 
     camera.getWorldDirection(camera.forward)
-    camera.getWorldDirection(camera.left);
-    camera.left.applyAxisAngle(camera.up, Math.PI / 2)
+    camera.left = new Vector3(-1,0,0).applyQuaternion(camera.quaternion);
+    
     ALLOW_FWD = true;
     ALLOW_BACK = true;
     ALLOW_LEFT = true;
@@ -511,16 +515,16 @@ function acceptPlayerInputs() {
 
     if (camera.canMove) {
         if (W_PRESSED && ALLOW_FWD) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.forward.multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.forward, camera.acceleration)
         }
         if (S_PRESSED && ALLOW_BACK) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.forward.x, -camera.forward.y, -camera.forward.z).multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.forward.x, -camera.forward.y, -camera.forward.z), camera.acceleration)
         }
         if (A_PRESSED && ALLOW_LEFT) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.left.multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration)
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(camera.left, camera.acceleration)
         }
         if (D_PRESSED && ALLOW_RIGHT) {
-            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.left.x, -camera.left.y, -camera.left.z).multiplyScalar(SPEED_DOWN_SCALAR), camera.acceleration);
+            camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(new Vector3(-camera.left.x, -camera.left.y, -camera.left.z), camera.acceleration);
         }
         if (SPACE_PRESSED) {
             camera.velocity = new Vector3(camera.velocity.x, camera.velocity.y, camera.velocity.z).lerp(VECTOR_ZERO, camera.acceleration);
@@ -548,16 +552,18 @@ function acceptPlayerInputs() {
 /*  
 * This section sets up the camera and player.
 */
-function createCreatureSprite(name, x, y, z) {
-    var tempSprite = new THREE.Sprite(monsterSpriteMaterials.get(name));
-    tempSprite.position.x = x;
-    tempSprite.position.y = y;
-    tempSprite.position.z = z;
-    tempSprite.scale.set(4, 4)
-    tempSprite.name = getName()
-    tempSprite.health = 20
-    tempSprite.status = "idle"
-    return tempSprite;
+class Monster {
+    constructor(name, x, y, z) {
+        this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(5,5,5), mPurple)
+        this.mesh.position.x = x;
+        this.mesh.position.y = y;
+        this.mesh.position.z = z;
+        this.mesh.velocity = new THREE.Vector3(0,0,0)
+        this.mesh.health = 20
+        this.mesh.category = 'monster'
+        this.mesh.name = getAbjadWord(4)
+        this.mesh.status = 'idle'
+    }
 }
 function createEffectSprite(name, x, y, z) {
     var tempSprite = new THREE.Sprite(effectSpriteMaterials.get(name));
@@ -570,21 +576,26 @@ function createEffectSprite(name, x, y, z) {
     return tempSprite;
 }
 function worldMoves() {
-    //Velocity
+    //Player
     camera.position.x += camera.velocity.x;
     camera.position.y += camera.velocity.y;
     camera.position.z += camera.velocity.z;
 
+    //Monsters
     for (let i = 0; i < monsters.length; i++) {
-        monsters[i].position.x += .01
+        monsters[i].mesh.position.x += monsters[i].mesh.velocity.x;
+        monsters[i].mesh.position.y += monsters[i].mesh.velocity.y;
+        monsters[i].mesh.position.z += monsters[i].mesh.velocity.z;
     }
 
+    //Objects
     for (let i = 0; i < debris.length; i++) {
         debris[i].position.x += debris[i].velocity.x;
         debris[i].position.y += debris[i].velocity.y;
         debris[i].position.z += debris[i].velocity.z;
     }
 
+    //EFFECTS Sprites
     for (let i = 0; i < sprites.length; i++) {
         sprites[i].timer++;
         if (sprites[i].timer == sprites[i].lifeSpan) {
@@ -593,12 +604,12 @@ function worldMoves() {
         }
     }
 
+    //TARGETER Sprites
     if (camera.targettedEnemy) {
         target.visible = true;
         var distanceVectorFromPlayer = new Vector3(camera.targettedEnemy.position.x - camera.position.x, 
             camera.targettedEnemy.position.y - camera.position.y,
             camera.targettedEnemy.position.z - camera.position.z).normalize()
-
         target.position.x = camera.position.x + distanceVectorFromPlayer.x
         target.position.y = camera.position.y + distanceVectorFromPlayer.y
         target.position.z = camera.position.z + distanceVectorFromPlayer.z
@@ -606,9 +617,9 @@ function worldMoves() {
 }
 
 for (let i = 0; i < 3; i++) {
-    var monster = createCreatureSprite('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20))
+    var monster = new Monster('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20))
     monsters.push(monster);
-    scene.add(monster)
+    scene.add(monster.mesh)
 }
 //#endregion
 
@@ -636,6 +647,7 @@ function generateAdminText(elapsedTime) {
     stats.innerText = "Time: " + elapsedTime.toFixed(0) + "\n"
     stats.innerText += "Position: " + camera.position.x.toFixed(3) + " " + camera.position.y.toFixed(3) + " " + camera.position.z.toFixed(3) + "\n"
     stats.innerText += "Vector Fwd: " + camera.forward.x.toFixed(3) + ", " + camera.forward.y.toFixed(3) + ", " + camera.forward.z.toFixed(3) + "\n"
+    stats.innerText += "Vector Left: " + camera.left.x.toFixed(3) + ", " + camera.left.y.toFixed(3) + ", " + camera.left.z.toFixed(3) + "\n"
     stats.innerText += "Velocity: " + camera.velocity.x.toFixed(3) + ", " + camera.velocity.y.toFixed(3) + ", " + camera.velocity.z.toFixed(3) + "\n"
 
     // //HEALTH AND AMMO

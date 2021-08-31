@@ -414,10 +414,11 @@ document.body.addEventListener('click', () => {
             camera.guns[camera.currentGun].timeLastFired = Date.now()
             gunhand.classList.add('fire-animation')
             setTimeout(() => { gunhand.classList.remove('fire-animation') }, 250)
-            var arrow = new THREE.ArrowHelper(camera.getWorldDirection(camera.forward), camera.getWorldPosition(camera.position), 100, 0xffffff);
+            var arrow = new THREE.ArrowHelper(camera.getWorldDirection(camera.forward), camera.getWorldPosition(camera.position), 1000, 0xff0000);
             arrow.cone.visible = false;
             arrow.line.scale.x = 5
             scene.add(arrow);
+            rayCaster.far = 1000;
             rayCaster.setFromCamera(mousePosition, camera);
             const intersects = rayCaster.intersectObjects(scene.children);
             //console.log(intersects)

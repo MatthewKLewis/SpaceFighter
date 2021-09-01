@@ -105,7 +105,7 @@ const mPurple = new THREE.MeshToonMaterial({ color: new THREE.Color('purple') })
 
 //Load Picture Materials into the Map
 let objMaterials = new Map()
-let objURLS = ['spaceDebris1', 'spaceHull']
+let objURLS = ['spaceDebris1', 'spaceHull', 'ball']
 for (let i = 0; i < objURLS.length; i++) {
     var tempMap = new THREE.TextureLoader().load(`assets/models/${objURLS[i]}Diffuse.png`);
     tempMap.magFilter = THREE.NearestFilter;
@@ -555,25 +555,37 @@ function acceptPlayerInputs() {
 * This section sets up the camera and player.
 */
 class Monster {
-    constructor(name, x, y, z, i) {
-        this.mesh = new THREE.Mesh(new THREE.BoxBufferGeometry(5,5,5), mPurple)
-        this.mesh.position.x = x;
-        this.mesh.position.y = y;
-        this.mesh.position.z = z;
-        this.mesh.velocity = new THREE.Vector3(0,0,0)
-        this.mesh.health = 20
-        this.mesh.category = 'monster'
-        this.mesh.name = getAbjadWord(4)
-        this.mesh.status = 'idle'
-        this.mesh.indexInMonsterArray = i
-        this.mesh.loseHealth = (loss) => {
-            this.mesh.health -= loss;
-            if (this.mesh.health <= 0) {
-                monsters.splice(i, 1);
-                scene.remove(this.mesh);
-                console.log('killed ' + this.mesh.name)
-            }
-        }
+    constructor(name, i) {
+        this.mesh = {}
+        objLoader.load(`assets/models/${name}.obj`, (obj) => {
+            obj.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                    child.material = objMaterials.get(name);
+                    child.position.x = randBetween(-40, 40)
+                    child.position.y = randBetween(-40, 40)
+                    child.position.z = randBetween(-40, 40)
+                    child.rotation.y = randBetween(-3, 3)
+                    this.mesh = child;
+                    this.mesh.velocity = new THREE.Vector3(0,0,0)
+                    this.mesh.health = 20
+                    this.mesh.category = 'monster'
+                    this.mesh.name = getAbjadWord(4)
+                    this.mesh.status = 'idle'
+                    this.mesh.indexInMonsterArray = i
+                    this.mesh.loseHealth = (loss) => {
+                        this.mesh.health -= loss;
+                        if (this.mesh.health <= 0) {
+                            monsters.splice(i, 1);
+                            scene.remove(this.mesh);
+                            console.log('killed ' + this.mesh.name)
+                        }
+                    }
+                    monsters.push(this)
+                    scene.add(child);
+                }
+            });
+        });
+
     }
 }
 function createEffectSprite(name, x, y, z) {
@@ -627,10 +639,8 @@ function worldMoves() {
     }
 }
 
-for (let i = 0; i < 3; i++) {
-    var monster = new Monster('enemy1', randBetween(-20, 20), randBetween(-20, 20), randBetween(-20, 20), i)
-    monsters.push(monster);
-    scene.add(monster.mesh)
+for (let i = 0; i < 6; i++) {
+    var monster = new Monster('ball', i)
 }
 //#endregion
 

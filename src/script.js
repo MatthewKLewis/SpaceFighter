@@ -606,6 +606,9 @@ function worldMoves() {
 
     //Monsters
     for (let i = 0; i < monsters.length; i++) {
+
+        monsters[i].mesh.velocity = new Vector3(0,0,1).applyQuaternion(monsters[i].mesh.quaternion).multiplyScalar(.08)
+
         monsters[i].mesh.position.x += monsters[i].mesh.velocity.x;
         monsters[i].mesh.position.y += monsters[i].mesh.velocity.y;
         monsters[i].mesh.position.z += monsters[i].mesh.velocity.z;

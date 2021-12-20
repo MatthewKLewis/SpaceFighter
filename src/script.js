@@ -138,7 +138,7 @@ for (let i = 0; i < powerupSpriteURLS.length; i++) {
 
 //Effect Sprites
 let effectSpriteMaterials = new Map()
-let effectSpriteURLS = []
+let effectSpriteURLS = ["enemy1"]
 for (let i = 0; i < effectSpriteURLS.length; i++) {
     var tempMap = new THREE.TextureLoader().load(`assets/images/${effectSpriteURLS[i]}.png`);
     tempMap.magFilter = THREE.NearestFilter;
@@ -576,6 +576,7 @@ class Monster {
                         this.mesh.health -= loss;
                         if (this.mesh.health <= 0) {
                             monsters.splice(i, 1);
+                            scene.add(createEffectSprite('enemy1', this.mesh.position.x, this.mesh.position.y, this.mesh.position.z));
                             scene.remove(this.mesh);
                             console.log('killed ' + this.mesh.name)
                         }
@@ -606,9 +607,8 @@ function worldMoves() {
 
     //Monsters
     for (let i = 0; i < monsters.length; i++) {
-
+        monsters[i].mesh.lookAt(camera.position.x, camera.position.y, camera.position.z);
         monsters[i].mesh.velocity = new Vector3(0,0,1).applyQuaternion(monsters[i].mesh.quaternion).multiplyScalar(.08)
-
         monsters[i].mesh.position.x += monsters[i].mesh.velocity.x;
         monsters[i].mesh.position.y += monsters[i].mesh.velocity.y;
         monsters[i].mesh.position.z += monsters[i].mesh.velocity.z;
